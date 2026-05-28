@@ -1,10 +1,21 @@
 """Test behaviour of the test flask app."""
 
+from unittest import mock
+
 import flask_jwt_extended
 
 from impact_stack import jwt
 
 
+class CustomSession(jwt.Session):
+    """Customized session class."""
+
+    def to_token_data(self):
+        """Add custom attribute."""
+        return {**super().to_token_data(), "custom": True}
+
+
+@mock.patch.object(jwt.manager, "session_cls", CustomSession)
 def test_getting_session_data_in_authorized_request(protected_app):
     """Send an authorized request to the endpoint."""
     session = jwt.Session("user-id", {"organization": ["app"]})
@@ -17,6 +28,7 @@ def test_getting_session_data_in_authorized_request(protected_app):
     assert response.json["identity"] == "user-id"
     assert response.json["user_claims"]["roles"] == {"organization": ["app"]}
     assert response.json["user_claims"]["session_id"]
+    assert response.json["custom"] is True
 
 
 def test_getting_injected_session_data(protected_app, jwt_inject_session):
@@ -61,6 +73,7 @@ def test_anonymous_session_with_optional(protected_app):
     assert response.json["user_claims"]["roles"] == {}
 
 
+@mock.patch.object(jwt.manager, "session_cls", CustomSession)
 def test_anonymous_session_with_organization(protected_app):
     """Test that sessions for anonymous requests read the x-ist-org header."""
     with protected_app.test_client() as client:
@@ -69,3 +82,4 @@ def test_anonymous_session_with_organization(protected_app):
     assert response.status_code == 200
     assert response.json["identity"] is None
     assert response.json["user_claims"]["roles"] == {"test-org": []}
+    assert response.json["custom"] is True

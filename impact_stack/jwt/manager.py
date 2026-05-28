@@ -9,6 +9,8 @@ from impact_stack.jwt.session import Session
 class Manager(flask_jwt_extended.JWTManager):
     """A JWTManager subclass with a bit of custom behaviour."""
 
+    session_cls = Session
+
     @staticmethod
     def _push_context_callback(session: Session, context):  # pylint: disable=method-hidden
         """Implement a default push context callback doing nothing."""
@@ -40,7 +42,7 @@ def create_session(_jwt_header, jwt_data):
     - moflask.jwt.get_current_session()
     with the latter being considered the most idiomatic.
     """
-    return Session.from_raw_token(jwt_data)
+    return manager.session_cls.from_raw_token(jwt_data)
 
 
 @manager.additional_claims_loader

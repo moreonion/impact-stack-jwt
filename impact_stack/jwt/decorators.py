@@ -36,7 +36,7 @@ def required(admitted_roles: t.Iterable[str] | None = None, optional=False, **kw
             if flask_jwt_extended.verify_jwt_in_request(optional=optional, **decorator_kwargs):
                 session = get_current_session()
             else:  # Authentication is optional or the request method is exempt.
-                session = Session.create_anonymous_session()
+                session = manager.session_cls.create_anonymous_session()
                 # pylint: disable=protected-access
                 flask.g._jwt_extended_jwt_user = {"loaded_user": session}
             manager.push_context(session)
