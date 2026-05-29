@@ -21,8 +21,10 @@ class Session:
     @classmethod
     def create_anonymous_session(cls):
         """Create an anonymous session from the request headers."""
-        org = flask.request.headers.get("x-ist-org", None)
-        session_uuid = flask.request.headers.get("x-ist-session-uuid", None)
+        headers = flask.request.headers
+        session_header = flask.current_app.config.get("AUTH_UUID_HEADER", "x-ist-session-uuid")
+        org = headers.get("x-ist-org", None)
+        session_uuid = headers.get(session_header, None)
         return cls(None, {org: []} if org else {}, session_uuid)
 
     def __init__(
