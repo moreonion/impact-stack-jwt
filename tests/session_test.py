@@ -70,3 +70,18 @@ class SessionTest:
         assert session.organizations_for_roles(["parent-role", "org-role"]) == {
             "root>parent",
         }
+
+    def test_create_anonymous_session_without_headers(self, protected_app):
+        """Test creating an anonymous session."""
+        with protected_app.test_request_context():
+            session = jwt.Session.create_anonymous_session()
+        assert not session.has_any_role_of("any")
+
+    def test_create_anonymous_session_respects_headers(self, protected_app):
+        """Test creating an anonymous session with custom headers."""
+        uuid = "00623072-95a5-42b4-b918-afd97bb701b8"
+        headers = {"X-IST-Org": "root", "X-IST-Session-UUID": uuid}
+        with protected_app.test_request_context(headers=headers):
+            session = jwt.Session.create_anonymous_session()
+        assert session.session_id == uuid
+        assert session.roles == {"root": frozenset()}
